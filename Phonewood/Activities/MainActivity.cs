@@ -6,6 +6,7 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 using Phoneword;
+using System.Collections.Generic;
 
 namespace Phoneword
 {
@@ -13,6 +14,7 @@ namespace Phoneword
     public class MainActivity : Activity
     {
         int count = 1;
+        static readonly List<string> phoneNumbers = new List<string>();
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -24,6 +26,7 @@ namespace Phoneword
             EditText phoneNumberText = FindViewById<EditText>(Resource.Id.PhoneNumberText);
             Button translateButton = FindViewById<Button>(Resource.Id.TranslateButton);
             Button callButton = FindViewById<Button>(Resource.Id.CallButton);
+            Button callHistoryButton = FindViewById<Button>(Resource.Id.CallHistoryButton);
 
             callButton.Enabled = false;
 
@@ -45,12 +48,20 @@ namespace Phoneword
                 }
             };
 
+
+
             callButton.Click += (object sender, EventArgs e) =>
             {
                 //create alert dialog that asks if user really wants to call
                 var callDialog = new AlertDialog.Builder(this);
                 callDialog.SetMessage("Call " + translatedNumber + "?");
                 callDialog.SetNeutralButton("Call", delegate{
+
+                    //add phone number to list
+                    phoneNumbers.Add(translatedNumber);
+                    callHistoryButton.Enabled = true;
+
+                    //call the number
                     var callIntent = new Intent(Intent.ActionCall);
                     callIntent.SetData(Android.Net.Uri.Parse("tel: " + translatedNumber));
                     StartActivity(callIntent);
@@ -58,6 +69,13 @@ namespace Phoneword
 
                 callDialog.SetNegativeButton("Cancel", delegate { });
                 callDialog.Show();
+            };
+
+            callHistoryButton.Click += (object sender,EventArgs e) =>
+            {
+                var intent = new Intent(this, typeof(CallHistoryActivity));
+                intent.PutStringArrayListExtra("phone_numbers", phoneNumbers);
+                StartActivity(intent);
             };
         }
     }
